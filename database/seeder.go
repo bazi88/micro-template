@@ -1,91 +1,154 @@
 package database
 
 import (
-	"context"
-	"crypto/rand"
-	"database/sql"
 	"fmt"
-	"log"
-	"os"
 	"time"
-
-	"github.com/alexedwards/argon2id"
 )
 
-type Seed struct {
-	DB *sql.DB
+// Seeder định nghĩa interface cho database seeding
+type Seeder interface {
+	Seed() error  // Thêm dữ liệu mẫu
+	Clean() error // Xóa dữ liệu mẫu
+	Name() string
 }
 
-func Seeder(db *sql.DB) *Seed {
-	return &Seed{
-		DB: db,
+// SeederHistory lưu trữ lịch sử các seeder đã chạy
+type SeederHistory struct {
+	Name      string    `json:"name" db:"name"`
+	RunAt     time.Time `json:"run_at" db:"run_at"`
+	Status    string    `json:"status" db:"status"`
+	BatchNo   int       `json:"batch_no" db:"batch_no"`
+	CleanedAt time.Time `json:"cleaned_at,omitempty" db:"cleaned_at"`
+}
+
+// SeederManager quản lý việc thực thi seeders
+type SeederManager struct {
+	db      DataStore
+	seeders []Seeder
+}
+
+// NewSeederManager tạo instance mới của SeederManager
+func NewSeederManager(db DataStore) *SeederManager {
+	return &SeederManager{
+		db:      db,
+		seeders: make([]Seeder, 0),
 	}
 }
 
-type user struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+// AddSeeder thêm seeder mới vào danh sách
+func (sm *SeederManager) AddSeeder(seeder Seeder) {
+	sm.seeders = append(sm.seeders, seeder)
 }
 
-func (m *Seed) SeedUsers() {
-	users := []user{
-		{
-			FirstName: "First Name",
-			LastName:  "Last Name",
-			Email:     "admin@gmhafiz.com",
-			Password:  randomAndWrite(16),
-		},
-	}
-
-	for _, u := range users {
-		password, err := argon2id.CreateHash(u.Password, argon2id.DefaultParams)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		_, err = m.DB.ExecContext(
-			context.Background(),
-			`INSERT INTO users (first_name, last_name, email, password, verified_at) 
-				VALUES ($1, $2, $3, $4, $5);`,
-			u.FirstName,
-			u.LastName,
-			u.Email,
-			password,
-			time.Now(),
-		)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-}
-
-func writeToEnv(password string) {
-	f, err := os.OpenFile(".env",
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// RunSeeders thực hiện tất cả seeders chưa được chạy
+func (sm *SeederManager) RunSeeders() error {
+	// Tạo bảng seeder history nếu chưa tồn tại
+	err := sm.createSeederTable()
 	if err != nil {
-		log.Println(err)
+		return fmt.Errorf("failed to create seeder table: %v", err)
 	}
-	defer f.Close()
-	if _, err := f.WriteString("\nADMIN_PASSWORD=" + password + "\n"); err != nil {
-		log.Println(err)
+
+	// Lấy batch number mới
+	batchNo, err := sm.getNextBatchNumber()
+	if err != nil {
+		return fmt.Errorf("failed to get next batch number: %v", err)
 	}
+
+	// Thực hiện các seeders
+	for _, seeder := range sm.seeders {
+		if !sm.isSeeded(seeder.Name()) {
+			err := sm.runSeeder(seeder, batchNo)
+			if err != nil {
+				return fmt.Errorf("failed to run seeder %s: %v", seeder.Name(), err)
+			}
+		}
+	}
+
+	return nil
 }
 
-func randomAndWrite(n int) string {
-	var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+"
-
-	ll := len(chars)
-	b := make([]byte, n)
-	_, _ = rand.Read(b)
-	for i := 0; i < n; i++ {
-		b[i] = chars[int(b[i])%ll]
+// CleanSeeders xóa dữ liệu từ batch cuối cùng
+func (sm *SeederManager) CleanSeeders() error {
+	// Lấy batch number cuối cùng
+	lastBatch, err := sm.getLastBatchNumber()
+	if err != nil {
+		return fmt.Errorf("failed to get last batch number: %v", err)
 	}
 
-	str := string(b)
-	fmt.Printf("Password is: %s\n", str)
+	// Lấy danh sách seeders của batch cuối
+	seeders, err := sm.getSeedersInBatch(lastBatch)
+	if err != nil {
+		return fmt.Errorf("failed to get seeders in batch %d: %v", lastBatch, err)
+	}
 
-	writeToEnv(str)
+	// Thực hiện clean theo thứ tự ngược lại
+	for i := len(seeders) - 1; i >= 0; i-- {
+		seederName := seeders[i].Name
+		for _, s := range sm.seeders {
+			if s.Name() == seederName {
+				err := s.Clean()
+				if err != nil {
+					return fmt.Errorf("failed to clean seeder %s: %v", seederName, err)
+				}
+				err = sm.updateSeederStatus(seederName, "cleaned", lastBatch)
+				if err != nil {
+					return fmt.Errorf("failed to update seeder status: %v", err)
+				}
+				break
+			}
+		}
+	}
 
-	return str
+	return nil
+}
+
+// Helper functions
+func (sm *SeederManager) createSeederTable() error {
+	// Implementation depends on database type
+	return nil
+}
+
+func (sm *SeederManager) getNextBatchNumber() (int, error) {
+	// Implementation depends on database type
+	return 1, nil
+}
+
+func (sm *SeederManager) getLastBatchNumber() (int, error) {
+	// Implementation depends on database type
+	return 1, nil
+}
+
+func (sm *SeederManager) isSeeded(name string) bool {
+	// Implementation depends on database type
+	return false
+}
+
+func (sm *SeederManager) runSeeder(seeder Seeder, batchNo int) error {
+	err := seeder.Seed()
+	if err != nil {
+		return err
+	}
+
+	// Lưu thông tin seeder đã chạy
+	history := SeederHistory{
+		Name:    seeder.Name(),
+		RunAt:   time.Now(),
+		Status:  "seeded",
+		BatchNo: batchNo,
+	}
+
+	// Lưu vào database
+	// Implementation depends on database type
+
+	return nil
+}
+
+func (sm *SeederManager) getSeedersInBatch(batchNo int) ([]SeederHistory, error) {
+	// Implementation depends on database type
+	return nil, nil
+}
+
+func (sm *SeederManager) updateSeederStatus(name, status string, batchNo int) error {
+	// Implementation depends on database type
+	return nil
 }

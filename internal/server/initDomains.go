@@ -7,16 +7,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/gmhafiz/go8/internal/domain/authentication"
-	authorHandler "github.com/gmhafiz/go8/internal/domain/author/handler"
-	authorRepo "github.com/gmhafiz/go8/internal/domain/author/repository"
-	authorUseCase "github.com/gmhafiz/go8/internal/domain/author/usecase"
-	bookHandler "github.com/gmhafiz/go8/internal/domain/book/handler"
-	bookRepo "github.com/gmhafiz/go8/internal/domain/book/repository"
-	bookUseCase "github.com/gmhafiz/go8/internal/domain/book/usecase"
-	"github.com/gmhafiz/go8/internal/domain/health"
-	"github.com/gmhafiz/go8/internal/middleware"
-	"github.com/gmhafiz/go8/internal/utility/respond"
+	"micro/internal/domain/authentication"
+	authorHandler "micro/internal/domain/author/handler"
+	authorRepo "micro/internal/domain/author/repository"
+	authorUseCase "micro/internal/domain/author/usecase"
+	bookHandler "micro/internal/domain/book/handler"
+	bookRepo "micro/internal/domain/book/repository"
+	bookUseCase "micro/internal/domain/book/usecase"
+	"micro/internal/domain/health"
+	"micro/internal/middleware"
+	"micro/internal/utility/respond"
 )
 
 func (s *Server) InitDomains() {

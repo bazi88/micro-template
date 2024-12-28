@@ -18,7 +18,7 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/alexedwards/argon2id"
-	"github.com/gmhafiz/go8/internal/utility/csrf"
+	"micro/internal/utility/csrf"
 	"github.com/gmhafiz/scs/v2"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
@@ -26,10 +26,10 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gmhafiz/go8/database"
-	"github.com/gmhafiz/go8/ent/gen"
-	"github.com/gmhafiz/go8/internal/middleware"
-	"github.com/gmhafiz/go8/third_party/postgresstore"
+	"micro/database"
+	"micro/ent/gen"
+	"micro/internal/middleware"
+	"micro/third_party/postgresstore"
 )
 
 const (

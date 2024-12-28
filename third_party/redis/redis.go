@@ -5,7 +5,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/gmhafiz/go8/config"
+	"micro/config"
 )
 
 func New(cfg config.Cache) *redis.Client {

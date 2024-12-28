@@ -3,16 +3,16 @@ package usecase
 import (
 	"context"
 	"errors"
-	"github.com/gmhafiz/go8/internal/domain/book"
+	"micro/internal/domain/book"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gmhafiz/go8/config"
-	"github.com/gmhafiz/go8/internal/domain/author"
-	"github.com/gmhafiz/go8/internal/domain/author/repository"
-	"github.com/gmhafiz/go8/internal/utility/filter"
+	"micro/config"
+	"micro/internal/domain/author"
+	"micro/internal/domain/author/repository"
+	"micro/internal/utility/filter"
 )
 
 var c config.Cache

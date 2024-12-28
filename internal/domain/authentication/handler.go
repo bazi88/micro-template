@@ -8,10 +8,10 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/gmhafiz/scs/v2"
 
-	"github.com/gmhafiz/go8/internal/middleware"
-	"github.com/gmhafiz/go8/internal/utility/param"
-	"github.com/gmhafiz/go8/internal/utility/request"
-	"github.com/gmhafiz/go8/internal/utility/respond"
+	"micro/internal/middleware"
+	"micro/internal/utility/param"
+	"micro/internal/utility/request"
+	"micro/internal/utility/respond"
 )
 
 const (

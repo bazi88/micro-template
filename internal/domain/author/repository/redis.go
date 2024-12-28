@@ -10,8 +10,8 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 	"go.opentelemetry.io/otel"
 
-	"github.com/gmhafiz/go8/internal/domain/author"
-	"github.com/gmhafiz/go8/internal/middleware"
+	"micro/internal/domain/author"
+	"micro/internal/middleware"
 )
 
 type Cache struct {

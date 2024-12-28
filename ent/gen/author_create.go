@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/gmhafiz/go8/ent/gen/author"
-	"github.com/gmhafiz/go8/ent/gen/book"
+	"micro/ent/gen/author"
+	"micro/ent/gen/book"
 )
 
 // AuthorCreate is the builder for creating a Author entity.

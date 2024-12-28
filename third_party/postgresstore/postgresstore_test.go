@@ -14,8 +14,8 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/gmhafiz/go8/config"
-	"github.com/gmhafiz/go8/internal/middleware"
+	"micro/config"
+	"micro/internal/middleware"
 )
 
 func TestMain(m *testing.M) {

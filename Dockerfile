@@ -1,25 +1,22 @@
-FROM golang:1.23 AS src
+# Build stage
+FROM golang:1.23-alpine AS builder
 
-WORKDIR /go/src/app/
+WORKDIR /app
 
-# Copy dependencies first to take advantage of Docker caching
-COPY go.mod ./
-COPY go.sum ./
+COPY go.* ./
 RUN go mod download
 
-COPY . ./
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
 
-ENV CGO_ENABLED=0
+# Final stage
+FROM alpine:3.19
 
-# Insert version using git tag and latest commit hash
-RUN go build -ldflags="-X main.Version=$(git describe --abbrev=0 --tags)-$(git rev-list -1 HEAD) -s" -o ./server ./cmd/go8/main.go
+WORKDIR /app
 
-FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /app/api .
+COPY --from=builder /app/.env .
 
-LABEL com.example.maintainers="User <author@example.com>"
+EXPOSE 8080
 
-COPY --from=src /go/src/app/server /usr/bin/local/server
-
-EXPOSE 3080
-
-ENTRYPOINT ["/usr/bin/local/server"]
+CMD ["./api"]

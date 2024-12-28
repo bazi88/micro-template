@@ -1,7 +1,7 @@
 package author
 
 import (
-	"github.com/gmhafiz/go8/internal/domain/book"
+	"micro/internal/domain/book"
 )
 
 type GetResponse struct {

@@ -11,9 +11,9 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/gmhafiz/scs/v2"
 
-	"github.com/gmhafiz/go8/ent/gen"
-	"github.com/gmhafiz/go8/ent/gen/session"
-	"github.com/gmhafiz/go8/ent/gen/user"
+	"micro/ent/gen"
+	"micro/ent/gen/session"
+	"micro/ent/gen/user"
 )
 
 type repo struct {

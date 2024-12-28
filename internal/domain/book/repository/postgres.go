@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/gmhafiz/go8/internal/domain/book"
-	"github.com/gmhafiz/go8/internal/utility/message"
+	"micro/internal/domain/book"
+	"micro/internal/utility/message"
 )
 
 //go:generate mirip -rm -pkg repository -out repo_mock.go . Book

@@ -1,20 +1,79 @@
 version: '3.8'
 
 services:
-
-  server:
-    image: "go8/server"
-    container_name: "go8_container"
-    env_file:
-      - .env
-    environment:
-      - API_HOST=0.0.0.0
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - OTEL_OTLP_ENDPOINT=otel-collector:4317
-      - REDIS_HOST=valkey
+  api:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - ${API_PORT}:${API_PORT}
+      - "${API_PORT:-8080}:8080"
+    environment:
+      - DB_TYPE=${DB_TYPE:-postgres}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-postgres}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME:-micro}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    volumes:
+      - ./infra/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  prometheus_data:
+  grafana_data:

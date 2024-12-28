@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/gmhafiz/go8/config"
+	"micro/config"
 )
 
 // SetupOTLPExporter bootstraps the OpenTelemetry pipeline.

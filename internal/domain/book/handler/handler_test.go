@@ -18,9 +18,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gmhafiz/go8/internal/domain/book"
-	"github.com/gmhafiz/go8/internal/domain/book/usecase"
-	"github.com/gmhafiz/go8/internal/utility/message"
+	"micro/internal/domain/book"
+	"micro/internal/domain/book/usecase"
+	"micro/internal/utility/message"
 )
 
 type Errs struct {

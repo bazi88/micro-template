@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/gmhafiz/go8/ent/gen/author"
-	"github.com/gmhafiz/go8/ent/gen/book"
-	"github.com/gmhafiz/go8/ent/gen/predicate"
+	"micro/ent/gen/author"
+	"micro/ent/gen/book"
+	"micro/ent/gen/predicate"
 )
 
 // AuthorUpdate is the builder for updating Author entities.

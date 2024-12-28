@@ -5,7 +5,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/gmhafiz/go8/internal/domain/author"
+	"micro/internal/domain/author"
 )
 
 // AuthorMock is a mock implementation of Author.

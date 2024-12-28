@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gmhafiz/go8/internal/server"
+	"micro/internal/server"
 )
 
 func main() {

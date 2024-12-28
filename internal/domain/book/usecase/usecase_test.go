@@ -8,9 +8,9 @@ import (
 	_ "github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gmhafiz/go8/internal/domain/book"
-	"github.com/gmhafiz/go8/internal/domain/book/repository"
-	"github.com/gmhafiz/go8/internal/utility/filter"
+	"micro/internal/domain/book"
+	"micro/internal/domain/book/repository"
+	"micro/internal/utility/filter"
 )
 
 func TestBookUseCase_Create(t *testing.T) {

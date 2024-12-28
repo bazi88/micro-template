@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/gmhafiz/go8/ent/gen/author"
-	"github.com/gmhafiz/go8/ent/gen/book"
+	"micro/ent/gen/author"
+	"micro/ent/gen/book"
 )
 
 // BookCreate is the builder for creating a Book entity.

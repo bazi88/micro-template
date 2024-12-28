@@ -9,12 +9,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"go.opentelemetry.io/otel"
 
-	"github.com/gmhafiz/go8/ent/gen"
-	entAuthor "github.com/gmhafiz/go8/ent/gen/author"
-	"github.com/gmhafiz/go8/ent/gen/predicate"
-	"github.com/gmhafiz/go8/internal/domain/author"
-	"github.com/gmhafiz/go8/internal/domain/book"
-	parseTime "github.com/gmhafiz/go8/internal/utility/time"
+	"micro/ent/gen"
+	entAuthor "micro/ent/gen/author"
+	"micro/ent/gen/predicate"
+	"micro/internal/domain/author"
+	"micro/internal/domain/book"
+	parseTime "micro/internal/utility/time"
 )
 
 type repository struct {

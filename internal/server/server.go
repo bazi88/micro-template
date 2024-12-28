@@ -36,17 +36,17 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"golang.org/x/mod/modfile"
 
-	"github.com/gmhafiz/go8/config"
-	"github.com/gmhafiz/go8/database"
-	"github.com/gmhafiz/go8/logger"
-	"github.com/gmhafiz/go8/third_party/otlp"
-	//_ "github.com/gmhafiz/go8/docs"
-	"github.com/gmhafiz/go8/ent/gen"
-	"github.com/gmhafiz/go8/internal/middleware"
-	db "github.com/gmhafiz/go8/third_party/database"
-	"github.com/gmhafiz/go8/third_party/postgresstore"
-	redisLib "github.com/gmhafiz/go8/third_party/redis"
-	"github.com/gmhafiz/go8/third_party/validate"
+	"micro/config"
+	"micro/database"
+	"micro/logger"
+	"micro/third_party/otlp"
+	//_ "micro/docs"
+	"micro/ent/gen"
+	"micro/internal/middleware"
+	db "micro/third_party/database"
+	"micro/third_party/postgresstore"
+	redisLib "micro/third_party/redis"
+	"micro/third_party/validate"
 )
 
 type Server struct {

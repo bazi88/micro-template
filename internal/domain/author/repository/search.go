@@ -6,10 +6,10 @@ import (
 
 	"go.opentelemetry.io/otel"
 
-	"github.com/gmhafiz/go8/ent/gen"
-	entAuthor "github.com/gmhafiz/go8/ent/gen/author"
-	"github.com/gmhafiz/go8/ent/gen/predicate"
-	"github.com/gmhafiz/go8/internal/domain/author"
+	"micro/ent/gen"
+	entAuthor "micro/ent/gen/author"
+	"micro/ent/gen/predicate"
+	"micro/internal/domain/author"
 )
 
 func NewSearch(db *gen.Client) *repository {

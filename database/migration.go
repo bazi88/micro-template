@@ -21,27 +21,27 @@ type MigrationHistory struct {
 	Status      string    `json:"status" db:"status"`
 }
 
-// Migrator quản lý việc thực thi migrations
-type Migrator struct {
+// MigrationManager quản lý việc thực thi migrations
+type MigrationManager struct {
 	db         DataStore
 	migrations []Migration
 }
 
 // NewMigrator tạo instance mới của Migrator
-func NewMigrator(db DataStore) *Migrator {
-	return &Migrator{
+func NewMigrator(db DataStore) *MigrationManager {
+	return &MigrationManager{
 		db:         db,
 		migrations: make([]Migration, 0),
 	}
 }
 
 // AddMigration thêm migration mới vào danh sách
-func (m *Migrator) AddMigration(migration Migration) {
+func (m *MigrationManager) AddMigration(migration Migration) {
 	m.migrations = append(m.migrations, migration)
 }
 
 // RunMigrations thực hiện tất cả migrations chưa được áp dụng
-func (m *Migrator) RunMigrations() error {
+func (m *MigrationManager) RunMigrations() error {
 	// Tạo bảng migration history nếu chưa tồn tại
 	err := m.createMigrationTable()
 	if err != nil {
@@ -68,7 +68,7 @@ func (m *Migrator) RunMigrations() error {
 }
 
 // RollbackMigration rollback migration cuối cùng
-func (m *Migrator) RollbackMigration() error {
+func (m *MigrationManager) RollbackMigration() error {
 	applied, err := m.getAppliedMigrations()
 	if err != nil {
 		return fmt.Errorf("failed to get applied migrations: %v", err)
@@ -110,17 +110,17 @@ func (m *Migrator) RollbackMigration() error {
 }
 
 // Helper functions
-func (m *Migrator) createMigrationTable() error {
+func (m *MigrationManager) createMigrationTable() error {
 	// Implementation depends on database type
 	return nil
 }
 
-func (m *Migrator) getAppliedMigrations() ([]MigrationHistory, error) {
+func (m *MigrationManager) getAppliedMigrations() ([]MigrationHistory, error) {
 	// Implementation depends on database type
 	return nil, nil
 }
 
-func (m *Migrator) isApplied(version string, applied []MigrationHistory) bool {
+func (m *MigrationManager) isApplied(version string, applied []MigrationHistory) bool {
 	for _, m := range applied {
 		if m.Version == version {
 			return true
@@ -129,7 +129,7 @@ func (m *Migrator) isApplied(version string, applied []MigrationHistory) bool {
 	return false
 }
 
-func (m *Migrator) runMigration(migration Migration) error {
+func (m *MigrationManager) runMigration(migration Migration) error {
 	err := migration.Up()
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func (m *Migrator) runMigration(migration Migration) error {
 	return nil
 }
 
-func (m *Migrator) updateMigrationStatus(version, status string) error {
+func (m *MigrationManager) updateMigrationStatus(version, status string) error {
 	// Implementation depends on database type
 	return nil
 }

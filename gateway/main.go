@@ -38,5 +38,6 @@ func main() {
 		return c.SendString("OK")
 	})
 
-	log.Fatal(app.Listen(":" + config.Port))
+	log.Printf("Starting API Gateway on port 80...")
+	log.Fatal(app.Listen(":80"))
 }

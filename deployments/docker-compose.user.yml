@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        SERVICE: user
+    ports:
+      - "${USER_SERVICE_PORT:-8081}:8081"
+    environment:
+      - SERVICE_NAME=user-service
+      - SERVICE_HOST=${USER_SERVICE_HOST}
+      - SERVICE_PORT=${USER_SERVICE_PORT:-8081}
+      - DB_HOST=${USER_DB_HOST:-localhost}
+      - DB_PORT=${USER_DB_PORT:-5432}
+      - DB_NAME=${USER_DB_NAME:-users}
+      - DB_USER=${USER_DB_USER:-postgres}
+      - DB_PASSWORD=${USER_DB_PASSWORD:-postgres}
+      - REDIS_HOST=${USER_REDIS_HOST:-localhost}
+      - REDIS_PORT=${USER_REDIS_PORT:-6379}
+      - CONSUL_ENABLED=${CONSUL_ENABLED:-true}
+      - CONSUL_ADDRESS=${CONSUL_ADDRESS:-consul:8500}
+      - METRICS_ENABLED=${METRICS_ENABLED:-true}
+      - TRACING_ENABLED=${TRACING_ENABLED:-true}
+      - JAEGER_AGENT_HOST=${JAEGER_AGENT_HOST:-localhost}
+      - JAEGER_AGENT_PORT=${JAEGER_AGENT_PORT:-6831}
+    volumes:
+      - ../config:/app/config
+      - ../logs:/app/logs
+    networks:
+      - user_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      mode: replicated
+      replicas: ${USER_REPLICAS:-1}
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '${USER_CPU_LIMIT:-0.5}'
+          memory: ${USER_MEMORY_LIMIT:-512M}
+        reservations:
+          cpus: '${USER_CPU_RESERVATION:-0.25}'
+          memory: ${USER_MEMORY_RESERVATION:-256M}
+
+  # Local development dependencies
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${USER_DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${USER_DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${USER_DB_NAME:-users}
+    ports:
+      - "${USER_DB_PORT:-5432}:5432"
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+    networks:
+      - user_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${USER_REDIS_PORT:-6379}:6379"
+    volumes:
+      - user_redis_data:/data
+    networks:
+      - user_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  user_network:
+    driver: bridge
+
+volumes:
+  user_postgres_data:
+  user_redis_data: 

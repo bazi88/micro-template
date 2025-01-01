@@ -1,8 +1,8 @@
 package gateway
 
 import (
+	"io"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -42,6 +42,11 @@ func NewHandler(config *Config) *Handler {
 func (h *Handler) HandleRequest(c *fiber.Ctx) error {
 	path := c.Path()
 
+	// Handle health check endpoint
+	if path == "/health" {
+		return c.SendString("OK")
+	}
+
 	// Find matching service
 	for _, service := range h.config.ServiceRegistry {
 		for _, prefix := range service.Prefixes {
@@ -59,32 +64,59 @@ func (h *Handler) HandleRequest(c *fiber.Ctx) error {
 func (h *Handler) proxyRequest(c *fiber.Ctx, service ServiceConfig) error {
 	breaker := h.cb[service.Name]
 
-	_, err := breaker.Execute(func() (interface{}, error) {
+	result, err := breaker.Execute(func() (interface{}, error) {
 		// Simple round-robin load balancing
-		targetURL, _ := url.Parse(service.URLs[0])
-
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-
-		// Customize proxy behavior
-		proxy.ModifyResponse = func(resp *http.Response) error {
-			resp.Header.Set("X-Proxy", "API Gateway")
-			return nil
+		targetURL, err := url.Parse(service.URLs[0])
+		if err != nil {
+			return nil, err
 		}
 
-		// Handle proxy errors
-		proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-			c.Status(http.StatusBadGateway).JSON(fiber.Map{
-				"error": "Proxy error",
-			})
+		// Create HTTP request
+		req, err := http.NewRequest(c.Method(), targetURL.String()+c.Path(), strings.NewReader(string(c.Body())))
+		if err != nil {
+			return nil, err
 		}
 
-		return nil, nil
+		// Copy headers
+		c.Request().Header.VisitAll(func(key, value []byte) {
+			req.Header.Set(string(key), string(value))
+		})
+
+		// Send request
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		// Copy response headers
+		for key, values := range resp.Header {
+			for _, value := range values {
+				c.Response().Header.Set(key, value)
+			}
+		}
+
+		// Copy response status
+		c.Status(resp.StatusCode)
+
+		// Read response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		return body, nil
 	})
 
 	if err != nil {
 		return c.Status(http.StatusServiceUnavailable).JSON(fiber.Map{
 			"error": "Service unavailable",
 		})
+	}
+
+	if body, ok := result.([]byte); ok {
+		return c.Send(body)
 	}
 
 	return nil

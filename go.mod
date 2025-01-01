@@ -1,11 +1,11 @@
 module micro
 
-go 1.23.0
+go 1.22.7
 
-toolchain go1.23.4
+toolchain go1.22.10
 
 require (
-	entgo.io/ent v0.14.1
+	entgo.io/ent v0.12.5
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/gmhafiz/scs/v2 v2.6.1

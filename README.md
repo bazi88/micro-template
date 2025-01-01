@@ -1,263 +1,222 @@
-# Go-micro-template
+# Go Microservices Template
 
-Go-micro-template là một boilerplate cho microservices sử dụng Golang, được thiết kế với kiến trúc module hóa cao, cho phép chạy độc lập từng service hoặc kết hợp nhiều services tùy theo nhu cầu.
+## Mô hình triển khai
 
-## Tính năng
+### 1. Monolithic Mode (Single Machine)
 
-### Core Services
-- **API Service**: RESTful API service với khả năng chạy standalone hoặc microservice mode
-- **Gateway Service**: API Gateway với load balancing và routing
-- **Logging Service**: Centralized logging service, có thể chạy độc lập hoặc kết hợp với ELK stack
+Trong mô hình monolithic, tất cả services chạy trên cùng một máy chủ. Phù hợp cho development và ứng dụng nhỏ.
 
-### Infrastructure Services (Optional)
-- **Database**: PostgreSQL/MongoDB (tùy chọn)
-- **Cache**: Redis (tùy chọn)
-- **Message Queue**: RabbitMQ/Kafka (tùy chọn)
-- **Service Discovery**: Consul (tùy chọn)
-
-### Monitoring & Logging Stack (Optional)
-- **ELK Stack**: Elasticsearch, Logstash, Kibana
-- **Monitoring Stack**: Prometheus, Grafana, Alertmanager
-
-## Cấu trúc dự án
-
-```
-go-micro-template/
-├── services/              # Core Services
-│   ├── api/              # API Service
-│   ├── gateway/          # API Gateway
-│   └── logging/          # Logging Service
-├── infrastructure/        # Optional Infrastructure
-│   ├── database/         # Database Services
-│   ├── cache/            # Cache Service
-│   ├── elk/              # ELK Stack
-│   └── monitoring/       # Monitoring Stack
-└── docker-compose.yml    # Main compose file
-```
-
-## Yêu cầu
-
-- Docker 20.10+
-- Docker Compose 2.0+
-- Go 1.21+ (cho development)
-
-## Hướng dẫn sử dụng
-
-### 1. API Service
-
-#### Standalone Mode
+#### 1.1. Cấu hình Monolithic
 ```bash
-cd services/api
-cat > .env << EOL
-API_MODE=standalone
-DB_ENABLED=false
-CACHE_ENABLED=false
-DISCOVERY_ENABLED=false
-EOL
-docker-compose up -d
+# Copy file môi trường mẫu
+cp env.example .env
+
+# Cấu hình cho monolithic mode
+API_MODE=monolithic
+SERVICE_DISCOVERY_ENABLED=false
+CONSUL_ENABLED=false
+
+# Cấu hình database và cache local
+DB_HOST=localhost
+REDIS_HOST=localhost
+ELASTICSEARCH_URL=http://localhost:9200
 ```
 
-#### With Database
+#### 1.2. Khởi động Monolithic
 ```bash
-cd services/api
-cat > .env << EOL
-API_MODE=micro
-DB_ENABLED=true
-DB_TYPE=postgres
-DB_HOST=postgres
-EOL
-docker-compose -f docker-compose.yml -f ../../infrastructure/database/postgres/docker-compose.yml up -d
+# Khởi động toàn bộ stack
+docker-compose -f docker-compose.monolithic.yml up -d
+
+# Kiểm tra services
+docker-compose -f docker-compose.monolithic.yml ps
 ```
 
-### 2. Logging Service
-
-#### File-based Logging
+#### 1.3. Scale trong Monolithic
 ```bash
-cd services/logging
-cat > .env << EOL
-ES_ENABLED=false
-LOG_OUTPUT=file
-EOL
-docker-compose up -d
-```
+# Scale một service cụ thể
+docker-compose -f docker-compose.monolithic.yml up -d --scale api=3
 
-#### With ELK Stack
-```bash
-cd infrastructure/elk
-cat > .env << EOL
-ES_VERSION=7.9.3
-ES_PORT=9200
-ES_JVM_MIN=512m
-ES_JVM_MAX=512m
-ELASTIC_USERNAME=elastic
-ELASTIC_PASSWORD=changeme
-KIBANA_VERSION=7.9.3
-KIBANA_PORT=5601
-EOL
-docker-compose up -d
-```
-
-### 3. Monitoring Stack
-
-```bash
-cd infrastructure/monitoring
-cat > .env << EOL
-# Prometheus
-PROMETHEUS_VERSION=v2.45.0
-PROMETHEUS_PORT=9090
-PROMETHEUS_RETENTION_TIME=15d
-
-# Grafana
-GRAFANA_VERSION=10.0.3
-GRAFANA_PORT=3000
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin123
-GRAFANA_ALLOW_SIGNUP=false
-
-# Alertmanager
-ALERTMANAGER_VERSION=v0.25.0
-ALERTMANAGER_PORT=9093
-EOL
-docker-compose up -d
-```
-
-## Truy cập các Service
-
-### Core Services
-- API Service: http://localhost:8080
-- Gateway: http://localhost:80
-- Logging Service: http://localhost:8082
-
-### Monitoring & Logging
-- Elasticsearch: http://localhost:9200
-- Kibana: http://localhost:5601
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000
-- Alertmanager: http://localhost:9093
-
-## Scaling Services
-
-### Horizontal Scaling
-```bash
-# Scale API service
-docker-compose up -d --scale api=3
-
-# Scale Logging service
-docker-compose up -d --scale logging=2
-```
-
-### Resource Limits
-```bash
-# API Service
+# Cấu hình resource limits
 API_CPU_LIMIT=0.5
 API_MEMORY_LIMIT=512M
-
-# Logging Service
-LOGGING_CPU_LIMIT=0.3
-LOGGING_MEMORY_LIMIT=256M
 ```
 
-## Environment Variables
+### 2. Microservices Mode (Multiple Machines)
 
-### API Service
-| Variable | Default | Description |
-|----------|---------|-------------|
-| API_MODE | standalone | standalone/micro |
-| DB_ENABLED | false | Enable database |
-| CACHE_ENABLED | false | Enable Redis cache |
-| DISCOVERY_ENABLED | false | Enable service discovery |
+Trong mô hình microservices, các services được phân tán trên nhiều máy chủ khác nhau. Phù hợp cho production và ứng dụng lớn.
 
-### Logging Service
-| Variable | Default | Description |
-|----------|---------|-------------|
-| ES_ENABLED | false | Enable Elasticsearch |
-| LOG_OUTPUT | file | file/elasticsearch |
-| LOG_FORMAT | json | json/text |
-
-### ELK Stack
-| Variable | Default | Description |
-|----------|---------|-------------|
-| ES_VERSION | 7.9.3 | Elasticsearch version |
-| ES_PORT | 9200 | Elasticsearch port |
-| KIBANA_VERSION | 7.9.3 | Kibana version |
-| KIBANA_PORT | 5601 | Kibana port |
-
-### Monitoring Stack
-| Variable | Default | Description |
-|----------|---------|-------------|
-| PROMETHEUS_VERSION | v2.45.0 | Prometheus version |
-| PROMETHEUS_PORT | 9090 | Prometheus port |
-| GRAFANA_VERSION | 10.0.3 | Grafana version |
-| GRAFANA_PORT | 3000 | Grafana port |
-| ALERTMANAGER_VERSION | v0.25.0 | Alertmanager version |
-| ALERTMANAGER_PORT | 9093 | Alertmanager port |
-
-## Development
-
-1. Clone repository:
+#### 2.1. Setup Service Discovery (Consul Server)
 ```bash
-git clone https://github.com/yourusername/go-micro-template.git
-cd go-micro-template
+# Trên máy chủ Consul
+cp env.example .env
+
+# Cấu hình Consul
+CONSUL_ENABLED=true
+CONSUL_ADDRESS=192.168.1.100:8500  # IP của Consul server
+
+# Khởi động Consul
+docker-compose -f docker-compose.microservices.yml up -d consul
 ```
 
-2. Start specific service:
+#### 2.2. Setup API Gateway
 ```bash
-cd services/api  # hoặc services khác
-cp .env.example .env
-docker-compose up -d
+# Trên máy chủ Gateway
+cp env.example .env
+
+# Cấu hình Gateway
+GATEWAY_MODE=micro
+API_MODE=micro
+SERVICE_DISCOVERY_ENABLED=true
+CONSUL_ADDRESS=192.168.1.100:8500
+
+# Khởi động Gateway
+docker-compose -f docker-compose.microservices.yml up -d api-gateway nginx
 ```
 
-3. Development với hot-reload:
+#### 2.3. Setup Individual Services
+
+##### User Service (Máy 1)
 ```bash
-cd services/api
-go run main.go
+# Copy config
+cp env.example .env
+
+# Cấu hình User Service
+ACTIVE_SERVICES=user
+USER_SERVICE_NAME=user-service
+USER_SERVICE_HOST=192.168.1.10
+USER_SERVICE_PORT=8081
+USER_DB_HOST=localhost
+USER_REDIS_HOST=localhost
+
+# Service Discovery
+CONSUL_ENABLED=true
+CONSUL_ADDRESS=192.168.1.100:8500
+
+# Khởi động User Service
+docker-compose -f docker-compose.user.yml up -d
 ```
 
-## Testing
-
+##### Notification Service (Máy 2)
 ```bash
-# Unit tests
-go test ./...
+# Copy config
+cp env.example .env
 
-# Integration tests
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+# Cấu hình Notification Service
+ACTIVE_SERVICES=notification
+NOTIFICATION_SERVICE_NAME=notification-service
+NOTIFICATION_SERVICE_HOST=192.168.1.11
+NOTIFICATION_SERVICE_PORT=8083
+NOTIFICATION_DB_HOST=localhost
+NOTIFICATION_REDIS_HOST=localhost
+
+# Service Discovery
+CONSUL_ENABLED=true
+CONSUL_ADDRESS=192.168.1.100:8500
+
+# Khởi động Notification Service
+docker-compose -f docker-compose.notification.yml up -d
 ```
 
-## Production Deployment
-
-1. Cấu hình security:
+#### 2.4. Monitoring Setup (Optional)
 ```bash
-# Đặt passwords mạnh
-ELASTIC_PASSWORD=your-secure-password
-GRAFANA_ADMIN_PASSWORD=your-secure-password
+# Trên máy chủ monitoring
+cp env.example .env
 
-# Bật TLS/SSL
-ENABLE_SSL=true
-SSL_CERT_PATH=/path/to/cert
+# Cấu hình monitoring
+PROMETHEUS_ENABLED=true
+GRAFANA_ENABLED=true
+JAEGER_ENABLED=true
+
+# Khởi động monitoring stack
+docker-compose -f docker-compose.microservices.yml up -d prometheus grafana jaeger
 ```
 
-2. Cấu hình monitoring:
+### 3. Chuyển đổi giữa các mode
+
+#### 3.1. Từ Monolithic sang Microservices
+1. Backup dữ liệu từ monolithic database
+2. Dừng monolithic stack
+3. Setup Consul server
+4. Migrate database cho từng service
+5. Khởi động từng service riêng biệt
+6. Cập nhật DNS/Load balancer
+
+#### 3.2. Từ Microservices sang Monolithic
+1. Backup dữ liệu từ tất cả services
+2. Dừng tất cả microservices
+3. Merge databases
+4. Khởi động monolithic stack
+5. Restore dữ liệu
+
+### 4. Health Check và Monitoring
+
+#### 4.1. Monolithic Health Check
 ```bash
-# Tăng retention time
-PROMETHEUS_RETENTION_TIME=30d
+# Kiểm tra tất cả services
+curl localhost/health
 
-# Cấu hình alerts
-ALERTMANAGER_CONFIG_PATH=/path/to/config
+# Kiểm tra service cụ thể
+curl localhost:8080/health  # API
+curl localhost:8081/health  # User
+curl localhost:8083/health  # Notification
 ```
 
-3. Deploy:
+#### 4.2. Microservices Health Check
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+# Kiểm tra service discovery
+curl http://consul:8500/v1/health/service/user-service
+
+# Kiểm tra gateway
+curl http://gateway/health
+
+# Kiểm tra individual services
+curl http://192.168.1.10:8081/health  # User Service
+curl http://192.168.1.11:8083/health  # Notification Service
 ```
 
-## Contributing
+### 5. Troubleshooting
 
-1. Fork repository
-2. Tạo feature branch
-3. Commit changes
-4. Push to branch
-5. Tạo Pull Request
+#### 5.1. Monolithic Troubleshooting
+```bash
+# Xem logs của tất cả services
+docker-compose -f docker-compose.monolithic.yml logs
 
-## License
+# Xem logs của service cụ thể
+docker-compose -f docker-compose.monolithic.yml logs api
+```
 
-MIT License - see [LICENSE](LICENSE) file
+#### 5.2. Microservices Troubleshooting
+```bash
+# Kiểm tra service discovery
+curl http://consul:8500/v1/catalog/services
+
+# Kiểm tra service registration
+curl http://consul:8500/v1/agent/services
+
+# Xem logs của service cụ thể
+docker-compose -f docker-compose.user.yml logs  # Trên máy User Service
+docker-compose -f docker-compose.notification.yml logs  # Trên máy Notification Service
+```
+
+### 6. Lưu ý quan trọng
+
+1. **Monolithic Mode**:
+   - Dễ dàng setup và debug
+   - Phù hợp cho development
+   - Resource sharing giữa các services
+   - Giới hạn về scale
+
+2. **Microservices Mode**:
+   - Phức tạp hơn trong setup
+   - Cần quản lý network giữa các services
+   - Độc lập trong scale và deploy
+   - Cần monitoring tốt
+   - Phù hợp cho production
+
+3. **Security**:
+   - Monolithic: Tập trung vào bảo mật external
+   - Microservices: Cần bảo mật cả internal và external
+
+4. **Backup & Recovery**:
+   - Monolithic: Backup tập trung
+   - Microservices: Backup phân tán

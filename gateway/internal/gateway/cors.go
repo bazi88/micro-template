@@ -1,42 +1,24 @@
 package gateway
 
 import (
-	"strings"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-// CORSConfig cấu hình CORS
 type CORSConfig struct {
-	Enabled        bool     `env:"CORS_ENABLED" envDefault:"true"`
-	AllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*"`
-	AllowedMethods []string `env:"CORS_ALLOWED_METHODS" envDefault:"GET,POST,PUT,DELETE,OPTIONS"`
-	AllowedHeaders []string `env:"CORS_ALLOWED_HEADERS" envDefault:"*"`
-	MaxAge         int      `env:"CORS_MAX_AGE" envDefault:"86400"`
+	AllowOrigins     string `env:"CORS_ALLOW_ORIGINS" envDefault:"*"`
+	AllowMethods     string `env:"CORS_ALLOW_METHODS" envDefault:"GET,POST,PUT,DELETE,OPTIONS"`
+	AllowHeaders     string `env:"CORS_ALLOW_HEADERS" envDefault:"Origin,Content-Type,Accept,Authorization"`
+	AllowCredentials bool   `env:"CORS_ALLOW_CREDENTIALS" envDefault:"true"`
+	MaxAge           int    `env:"CORS_MAX_AGE" envDefault:"24"`
 }
 
-// NewCORSConfig tạo cấu hình CORS mới từ environment
-func NewCORSConfig() *CORSConfig {
-	return &CORSConfig{
-		Enabled:        true,
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"*"},
-		MaxAge:         86400,
-	}
-}
-
-// ConfigureCORS cấu hình CORS middleware cho Fiber app
-func ConfigureCORS(app *fiber.App, config *CORSConfig) {
-	if !config.Enabled {
-		return
-	}
-
+func ConfigureCORS(app *fiber.App, config CORSConfig) {
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: strings.Join(config.AllowedOrigins, ","),
-		AllowMethods: strings.Join(config.AllowedMethods, ","),
-		AllowHeaders: strings.Join(config.AllowedHeaders, ","),
-		MaxAge:       config.MaxAge,
+		AllowOrigins:     config.AllowOrigins,
+		AllowMethods:     config.AllowMethods,
+		AllowHeaders:     config.AllowHeaders,
+		AllowCredentials: config.AllowCredentials,
+		MaxAge:           config.MaxAge,
 	}))
 }

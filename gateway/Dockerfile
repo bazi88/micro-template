@@ -11,4 +11,7 @@ RUN go build -o main .
 
 EXPOSE 80
 
+# Copy config file
+COPY config/config.yaml /app/config/config.yaml
+
 CMD ["./main"] 

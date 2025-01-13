@@ -1,17 +1,17 @@
-FROM golang:1.21-alpine
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
 
-RUN go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o gateway ./gateway
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/gateway .
 
 EXPOSE 80
 
-# Copy config file
-COPY config/config.yaml /app/config/config.yaml
-
-CMD ["./main"] 
+CMD ["./gateway"] 

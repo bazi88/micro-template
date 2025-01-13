@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Register service with Consul
-	err = sd.RegisterService("api-gateway", 80)
+	err = sd.RegisterService("logging-service", 8082)
 	if err != nil {
 		log.Fatalf("Failed to register service: %v", err)
 	}
@@ -30,26 +30,29 @@ func main() {
 		return c.SendString("OK")
 	})
 
-	// Forward requests to API service
-	app.Get("/api/*", func(c *fiber.Ctx) error {
-		apiURL, err := sd.GetServiceURL("api")
-		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("API service not available")
+	app.Post("/logs", func(c *fiber.Ctx) error {
+		var logEntry struct {
+			Level   string `json:"level"`
+			Message string `json:"message"`
+			Service string `json:"service"`
 		}
-		// Forward request to API service
-		// TODO: Implement request forwarding
-		return c.SendString("API service available at: " + apiURL)
+		if err := c.BodyParser(&logEntry); err != nil {
+			return err
+		}
+
+		// TODO: Store log in Elasticsearch
+		log.Printf("[%s] %s: %s", logEntry.Service, logEntry.Level, logEntry.Message)
+
+		return c.JSON(fiber.Map{
+			"status": "logged",
+		})
 	})
 
-	// Forward requests to Logging service
-	app.Get("/logs/*", func(c *fiber.Ctx) error {
-		loggingURL, err := sd.GetServiceURL("logging-service")
-		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("Logging service not available")
-		}
-		// Forward request to Logging service
-		// TODO: Implement request forwarding
-		return c.SendString("Logging service available at: " + loggingURL)
+	app.Get("/logs", func(c *fiber.Ctx) error {
+		// TODO: Implement log retrieval from Elasticsearch
+		return c.JSON(fiber.Map{
+			"logs": []string{},
+		})
 	})
 
 	// Graceful shutdown
@@ -59,7 +62,7 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down...")
-		if err := sd.DeregisterService("api-gateway-80"); err != nil {
+		if err := sd.DeregisterService("logging-service-8082"); err != nil {
 			log.Printf("Error deregistering service: %v", err)
 		}
 		if err := app.Shutdown(); err != nil {
@@ -68,7 +71,7 @@ func main() {
 	}()
 
 	// Start server
-	if err := app.Listen(":80"); err != nil {
+	if err := app.Listen(":8082"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

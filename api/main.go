@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Register service with Consul
-	err = sd.RegisterService("api-gateway", 80)
+	err = sd.RegisterService("api", 8080)
 	if err != nil {
 		log.Fatalf("Failed to register service: %v", err)
 	}
@@ -30,26 +30,18 @@ func main() {
 		return c.SendString("OK")
 	})
 
-	// Forward requests to API service
-	app.Get("/api/*", func(c *fiber.Ctx) error {
-		apiURL, err := sd.GetServiceURL("api")
-		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("API service not available")
-		}
-		// Forward request to API service
-		// TODO: Implement request forwarding
-		return c.SendString("API service available at: " + apiURL)
+	app.Get("/api/users", func(c *fiber.Ctx) error {
+		// TODO: Implement user listing
+		return c.JSON(fiber.Map{
+			"users": []string{"user1", "user2"},
+		})
 	})
 
-	// Forward requests to Logging service
-	app.Get("/logs/*", func(c *fiber.Ctx) error {
-		loggingURL, err := sd.GetServiceURL("logging-service")
-		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("Logging service not available")
-		}
-		// Forward request to Logging service
-		// TODO: Implement request forwarding
-		return c.SendString("Logging service available at: " + loggingURL)
+	app.Get("/api/posts", func(c *fiber.Ctx) error {
+		// TODO: Implement post listing
+		return c.JSON(fiber.Map{
+			"posts": []string{"post1", "post2"},
+		})
 	})
 
 	// Graceful shutdown
@@ -59,7 +51,7 @@ func main() {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down...")
-		if err := sd.DeregisterService("api-gateway-80"); err != nil {
+		if err := sd.DeregisterService("api-8080"); err != nil {
 			log.Printf("Error deregistering service: %v", err)
 		}
 		if err := app.Shutdown(); err != nil {
@@ -68,7 +60,7 @@ func main() {
 	}()
 
 	// Start server
-	if err := app.Listen(":80"); err != nil {
+	if err := app.Listen(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

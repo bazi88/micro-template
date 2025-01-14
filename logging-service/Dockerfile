@@ -10,6 +10,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
+RUN apk add --no-cache curl
+
 COPY --from=builder /app/logging-service .
 
 EXPOSE 8082

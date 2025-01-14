@@ -1,13 +1,12 @@
 module github.com/forum_golang/micro-template
 
-go 1.22.7
-
-toolchain go1.23.0
+go 1.23
 
 require (
 	entgo.io/ent v0.12.5
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/cespare/xxhash/v2 v2.3.0
+	github.com/elastic/go-elasticsearch/v7 v7.17.10
 	github.com/gmhafiz/scs/v2 v2.6.1
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-playground/validator/v10 v10.23.0

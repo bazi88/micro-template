@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,22 +35,57 @@ func main() {
 	})
 
 	// Forward requests to API service
-	app.Get("/api/*", func(c *fiber.Ctx) error {
-		apiURL, err := sd.GetServiceURL("api")
+	app.All("/api/*", func(c *fiber.Ctx) error {
+		// Use container name for service discovery within Docker network
+		apiURL := fmt.Sprintf("http://api:8080%s", c.Path())
+
+		// Create HTTP client
+		client := &http.Client{}
+
+		// Create new request
+		req, err := http.NewRequest(
+			c.Method(),
+			apiURL,
+			bytes.NewReader(c.Body()),
+		)
 		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("API service not available")
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 		}
-		// Forward request to API service
-		// TODO: Implement request forwarding
-		return c.SendString("API service available at: " + apiURL)
+
+		// Copy headers
+		for key, values := range c.GetReqHeaders() {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
+		}
+
+		// Forward the request
+		resp, err := client.Do(req)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		}
+		defer resp.Body.Close()
+
+		// Copy response headers
+		for key, values := range resp.Header {
+			for _, value := range values {
+				c.Response().Header.Set(key, value)
+			}
+		}
+
+		// Read response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		}
+
+		// Send response
+		return c.Status(resp.StatusCode).Send(body)
 	})
 
 	// Forward requests to Logging service
 	app.Get("/logs/*", func(c *fiber.Ctx) error {
-		loggingURL, err := sd.GetServiceURL("logging-service")
-		if err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).SendString("Logging service not available")
-		}
+		loggingURL := fmt.Sprintf("http://logging-service:8082%s", c.Path())
 		// Forward request to Logging service
 		// TODO: Implement request forwarding
 		return c.SendString("Logging service available at: " + loggingURL)

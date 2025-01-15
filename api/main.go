@@ -15,6 +15,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type Book struct {
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Year   int    `json:"year"`
+}
+
 func main() {
 	app := fiber.New()
 
@@ -33,6 +39,19 @@ func main() {
 	// Setup routes
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
+	})
+
+	app.Post("/api/v1/book", func(c *fiber.Ctx) error {
+		book := new(Book)
+		if err := c.BodyParser(book); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Cannot parse request body",
+			})
+		}
+
+		// TODO: Save book to database
+		// For now, just return the book
+		return c.Status(fiber.StatusCreated).JSON(book)
 	})
 
 	app.Get("/api/test-log", func(c *fiber.Ctx) error {
